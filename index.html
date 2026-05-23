@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>vCard Manager</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); padding: 15px; color: #1e293b; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .full { grid-column: span 2; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; }
+        .btn-main { background: var(--primary); color: white; }
+        .btn-vcf { background: #7c3aed; color: white; }
+        .btn-share { background: #16a34a; color: white; }
+        .row-btn { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .custom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        #guide { display: none; background: #eff6ff; padding: 15px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 15px; }
+        textarea { width: 100%; height: 80px; margin-top: 15px; font-size: 0.8rem; background: #f1f5f9; border-radius: 8px; padding: 10px; border: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="text-align:center">vCard Manager<button onclick="toggleGuide()" style="padding:5px; width:auto; font-size:12px;">+</button></h2>
+    
+    <div id="guide">
+        <p><b>How to use:</b></p>
+        <ol>
+            <li>Use <b>Add</b> to create a new profile.</li>
+            <li>Fill in your details for that profile.</li>
+            <li>For custom fields, use <b>X-</b> (e.g., <i>X-HOUSE</i>) so phones recognize them as custom labels.</li>
+            <li>Click <b>Save Profile</b> to lock it in.</li>
+            <li>Use <b>Export</b> or <b>Share</b> to send it.</li>
+        </ol>
+    </div>
+
+    <div id="profileControls">
+        <select id="profileSelect" onchange="loadProfile()"></select>
+        <div class="row-btn">
+            <button onclick="addProfile()" style="background:#e2e8f0;">Add</button>
+            <button onclick="deleteProfile()" style="background:#fee2e2; color:#b91c1c;">Delete</button>
+        </div>
+    </div>
+
+    <div class="grid" style="margin-top:15px;">
+        <input type="text" id="fName" placeholder="First Name" oninput="updateRaw()">
+        <input type="text" id="lName" placeholder="Last Name" oninput="updateRaw()">
+        <input type="text" id="job" class="full" placeholder="Job Title" oninput="updateRaw()">
+        <input type="text" id="comp" class="full" placeholder="Company" oninput="updateRaw()">
+        <input type="tel" id="phone" placeholder="Mobile" oninput="updateRaw()">
+        <input type="email" id="email" placeholder="Email" oninput="updateRaw()">
+        <input type="text" id="web" class="full" placeholder="Website" oninput="updateRaw()">
+        <input type="text" id="addr" class="full" placeholder="Address" oninput="updateRaw()">
+    </div>
+
+    <div id="customFields">
+        <div class="custom-row"><input type="text" class="cLabel" placeholder="Label" oninput="updateRaw()"><input type="text" class="cValue" placeholder="Value" oninput="updateRaw()"></div>
+        <div class="custom-row"><input type="text" class="cLabel" placeholder="Label" oninput="updateRaw()"><input type="text" class="cValue" placeholder="Value" oninput="updateRaw()"></div>
+        <div class="custom-row"><input type="text" class="cLabel" placeholder="Label" oninput="updateRaw()"><input type="text" class="cValue" placeholder="Value" oninput="updateRaw()"></div>
+        <div class="custom-row"><input type="text" class="cLabel" placeholder="Label" oninput="updateRaw()"><input type="text" class="cValue" placeholder="Value" oninput="updateRaw()"></div>
+        <div class="custom-row"><input type="text" class="cLabel" placeholder="Label" oninput="updateRaw()"><input type="text" class="cValue" placeholder="Value" oninput="updateRaw()"></div>
+    </div>
+
+    <button class="btn-main" onclick="saveCurrentProfile()">Save Profile</button>
+    <button class="btn-vcf" onclick="downloadVCard()">Export .vcf</button>
+    <button class="btn-share" onclick="shareVCard()">Share Contact</button>
+    
+    <textarea id="rawOutput" readonly></textarea>
+</div>
+
+<script>
+    let profiles = JSON.parse(localStorage.getItem('vcard_all_profiles')) || { "Default": { fields: {}, labels: [], values: [] } };
+
+    function toggleGuide() {
+        const g = document.getElementById('guide');
+        g.style.display = (g.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function init() {
+        const select = document.getElementById('profileSelect');
+        select.innerHTML = "";
+        Object.keys(profiles).forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name; opt.innerText = name;
+            select.appendChild(opt);
+        });
+        loadProfile();
+    }
+
+    function addProfile() {
+        if(Object.keys(profiles).length >= 20) return alert("Limit of 20 profiles reached.");
+        const name = prompt("Profile Name:");
+        if(name && !profiles[name]) {
+            profiles[name] = { fields: {}, labels: [], values: [] };
+            localStorage.setItem('vcard_all_profiles', JSON.stringify(profiles));
+            init();
+            document.getElementById('profileSelect').value = name;
+            loadProfile();
+        }
+    }
+
+    function deleteProfile() {
+        const name = document.getElementById('profileSelect').value;
+        if(name === "Default") return alert("Cannot delete Default.");
+        delete profiles[name];
+        localStorage.setItem('vcard_all_profiles', JSON.stringify(profiles));
+        init();
+    }
+
+    function saveCurrentProfile() {
+        const name = document.getElementById('profileSelect').value;
+        const data = { fields: {}, labels: [], values: [] };
+        document.querySelectorAll('input:not(.cLabel):not(.cValue)').forEach(i => data.fields[i.id] = i.value);
+        document.querySelectorAll('.cLabel').forEach(i => data.labels.push(i.value));
+        document.querySelectorAll('.cValue').forEach(i => data.values.push(i.value));
+        profiles[name] = data;
+        localStorage.setItem('vcard_all_profiles', JSON.stringify(profiles));
+        alert("Saved " + name);
+    }
+
+    function loadProfile() {
+        const name = document.getElementById('profileSelect').value;
+        const data = profiles[name] || { fields: {}, labels: [], values: [] };
+        // Clear inputs first
+        document.querySelectorAll('input').forEach(i => i.value = "");
+        // Then populate
+        Object.keys(data.fields).forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = data.fields[id]; });
+        document.querySelectorAll('.cLabel').forEach((l, i) => l.value = data.labels[i] || "");
+        document.querySelectorAll('.cValue').forEach((v, i) => v.value = data.values[i] || "");
+        updateRaw();
+    }
+
+    function updateRaw() {
+        const d = {};
+        document.querySelectorAll('input:not(.cLabel):not(.cValue)').forEach(i => d[i.id] = i.value);
+        let custom = "";
+        document.querySelectorAll('.cLabel').forEach((l, i) => {
+            const val = document.querySelectorAll('.cValue')[i].value;
+            if (l.value && val) custom += `${l.value}:${val}\n`;
+        });
+        document.getElementById('rawOutput').value = `Name:${d.fName || ''} ${d.lName || ''}\nCompany:${d.comp || ''}\nJob:${d.job || ''}\nPhone:${d.phone || ''}\nEmail:${d.email || ''}\nWebsite:${d.web || ''}\nAddress:${d.addr || ''}\n${custom}`;
+    }
+
+    function downloadVCard() {
+        const d = {};
+        document.querySelectorAll('input:not(.cLabel):not(.cValue)').forEach(i => d[i.id] = i.value);
+        const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${d.fName || ''} ${d.lName || ''}\nORG:${d.comp || ''}\nTITLE:${d.job || ''}\nTEL:${d.phone || ''}\nEMAIL:${d.email || ''}\nURL:${d.web || ''}\nADR:${d.addr || ''}\nEND:VCARD`;
+        const blob = new Blob([vcard], { type: 'text/vcard' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = (d.fName || "contact") + ".vcf";
+        link.click();
+    }
+
+    async function shareVCard() {
+        const text = updateRaw();
+        const blob = new Blob([text], { type: 'text/plain' });
+        const file = new File([blob], "contact.txt", { type: "text/plain" });
+        if (navigator.share) {
+            try { await navigator.share({ title: 'Contact', text: text, files: [file] }); } 
+            catch (err) { console.log('Share failed'); }
+        } else { alert("Sharing not supported."); }
+    }
+
+    init();
+</script>
+</body>
+</html>

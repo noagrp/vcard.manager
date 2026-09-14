@@ -12,39 +12,81 @@
 <style>
 :root{--primary:#2563eb;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--soft:#f1f5f9;--danger:#b91c1c}
 *{box-sizing:border-box}html{min-height:100%}body{margin:0;min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:max(14px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
-.container{max-width:560px;margin:auto;background:var(--card);padding:20px;border-radius:18px;border:1px solid var(--border);box-shadow:0 10px 30px rgba(15,23,42,.05)}
+.container{max-width:620px;margin:auto;background:var(--card);padding:20px;border-radius:18px;border:1px solid var(--border);box-shadow:0 10px 30px rgba(15,23,42,.05)}
 .header{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px}.header h1{font-size:24px;margin:0}.help{width:28px;height:28px;padding:0;margin:0;border-radius:50%;background:var(--soft);color:var(--text)}
 #guide{display:none;background:#eff6ff;padding:14px;border-radius:10px;font-size:13px;line-height:1.5;margin-bottom:14px}#guide p{margin:0}
-.grid,.custom-row,.row-btn,.actions{display:grid;gap:10px}.grid{grid-template-columns:1fr 1fr;margin-top:14px}.full{grid-column:1/-1}.custom-row{grid-template-columns:1fr 1.35fr;margin-top:10px}.row-btn,.actions{grid-template-columns:1fr 1fr}
-input,select,textarea,button{font:inherit}input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:var(--text);font-size:16px}input:focus,select:focus{outline:2px solid rgba(37,99,235,.2);border-color:var(--primary)}
+.section{margin-top:16px}.section-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px}
+.grid,.custom-row,.row-btn,.actions{display:grid;gap:10px}.grid{grid-template-columns:1fr 1fr}.name-grid{grid-template-columns:.8fr 1.2fr 1.2fr}.full{grid-column:1/-1}.custom-row{grid-template-columns:1fr 1.35fr;margin-top:10px}.row-btn,.actions{grid-template-columns:1fr 1fr}
+input,select,textarea,button{font:inherit}input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:var(--text);font-size:16px}textarea{min-height:92px;resize:vertical}input:focus,select:focus,textarea:focus{outline:2px solid rgba(37,99,235,.2);border-color:var(--primary)}
 button{padding:13px;border:0;border-radius:9px;font-weight:700;cursor:pointer;margin-top:8px;width:100%;-webkit-tap-highlight-color:transparent}.btn-main{background:var(--primary);color:#fff}.btn-vcf{background:#7c3aed;color:#fff}.btn-share{background:#16a34a;color:#fff}.btn-lite{background:var(--soft);color:var(--text)}.btn-danger{background:#fee2e2;color:var(--danger)}
-textarea{width:100%;height:150px;margin-top:14px;font-size:12px;line-height:1.45;background:var(--soft);border-radius:9px;padding:12px;border:1px solid var(--border);resize:vertical;color:#334155}
+#rawOutput{height:190px;margin-top:14px;font-size:12px;line-height:1.45;background:var(--soft);border:1px solid var(--border);color:#334155}
 .status{min-height:18px;margin-top:9px;text-align:center;font-size:12px;color:var(--muted)}
-@media(max-width:520px){.container{padding:16px;border-radius:14px}.grid,.custom-row{grid-template-columns:1fr}.full{grid-column:auto}.header h1{font-size:22px}.actions{grid-template-columns:1fr}.row-btn{grid-template-columns:1fr 1fr}}
-@media(prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#111827;--text:#e5e7eb;--muted:#94a3b8;--border:#334155;--soft:#1e293b}.container{box-shadow:none}input,select{background:#0f172a;color:#e5e7eb;border-color:#475569}#guide{background:#172554}textarea{color:#cbd5e1}}
+.hint{font-size:12px;color:var(--muted);margin:6px 0 0}
+@media(max-width:560px){.container{padding:16px;border-radius:14px}.grid,.name-grid,.custom-row{grid-template-columns:1fr}.full{grid-column:auto}.header h1{font-size:22px}.actions{grid-template-columns:1fr}.row-btn{grid-template-columns:1fr 1fr}}
+@media(prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#111827;--text:#e5e7eb;--muted:#94a3b8;--border:#334155;--soft:#1e293b}.container{box-shadow:none}input,select,textarea{background:#0f172a;color:#e5e7eb;border-color:#475569}#guide{background:#172554}#rawOutput{color:#cbd5e1}}
 </style>
 </head>
 <body>
 <div class="container">
   <div class="header"><h1>vCard Manager</h1><button class="help" onclick="toggleGuide()" aria-label="Help">?</button></div>
-  <div id="guide"><p><b>How to use:</b> create a profile, fill in the contact details, then Save, Export or Share. Custom labels are exported as vCard <b>X-</b> fields automatically.</p></div>
+  <div id="guide"><p><b>How to use:</b> create a profile, fill in only the fields you need, then Save, Export or Share. The name fields map directly to the vCard structure, so empty parts are expected and valid. Custom labels are exported as <b>X-</b> fields automatically.</p></div>
 
   <select id="profileSelect" onchange="loadProfile()" aria-label="Profile"></select>
   <div class="row-btn"><button class="btn-lite" onclick="addProfile()">Add Profile</button><button class="btn-danger" onclick="deleteProfile()">Delete</button></div>
 
-  <div class="grid">
-    <input id="fName" placeholder="First Name" autocomplete="given-name">
-    <input id="lName" placeholder="Last Name" autocomplete="family-name">
-    <input id="job" class="full" placeholder="Job Title" autocomplete="organization-title">
-    <input id="comp" class="full" placeholder="Company" autocomplete="organization">
-    <input type="tel" id="phone" placeholder="Mobile" autocomplete="tel">
-    <input type="email" id="email" placeholder="Email" autocomplete="email">
-    <input type="url" id="web" class="full" placeholder="Website" autocomplete="url">
-    <input id="addr" class="full" placeholder="Address" autocomplete="street-address">
+  <div class="section">
+    <div class="section-title">Name</div>
+    <div class="grid name-grid">
+      <input id="prefix" placeholder="Prefix (Mr, Dr)">
+      <input id="fName" placeholder="First Name" autocomplete="given-name">
+      <input id="mName" placeholder="Middle Name" autocomplete="additional-name">
+      <input id="lName" placeholder="Last Name" autocomplete="family-name">
+      <input id="suffix" placeholder="Suffix (Jr, III)">
+      <input id="nickname" placeholder="Nickname" autocomplete="nickname">
+    </div>
   </div>
 
-  <div id="customFields"></div>
-  <button class="btn-lite" onclick="addCustomField()">+ Custom Field</button>
+  <div class="section">
+    <div class="section-title">Work</div>
+    <div class="grid">
+      <input id="job" placeholder="Job Title" autocomplete="organization-title">
+      <input id="comp" placeholder="Company" autocomplete="organization">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Phones</div>
+    <div class="grid">
+      <input type="tel" id="phoneMobile" placeholder="Mobile" autocomplete="tel">
+      <input type="tel" id="phoneWork" placeholder="Work Phone">
+      <input type="tel" id="phoneHome" placeholder="Home Phone">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Email & Web</div>
+    <div class="grid">
+      <input type="email" id="emailPersonal" placeholder="Personal Email" autocomplete="email">
+      <input type="email" id="emailWork" placeholder="Work Email">
+      <input type="url" id="web" class="full" placeholder="Website" autocomplete="url">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Details</div>
+    <div class="grid">
+      <input type="date" id="birthday" placeholder="Birthday" autocomplete="bday">
+      <input id="addr" class="full" placeholder="Address" autocomplete="street-address">
+      <textarea id="note" class="full" placeholder="Notes"></textarea>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Custom</div>
+    <div id="customFields"></div>
+    <button class="btn-lite" onclick="addCustomField()">+ Custom Field</button>
+    <p class="hint">Example: House → exported as X-HOUSE.</p>
+  </div>
 
   <button class="btn-main" onclick="saveCurrentProfile()">Save Profile</button>
   <div class="actions"><button class="btn-vcf" onclick="downloadVCard()">Export .vcf</button><button class="btn-share" onclick="shareVCard()">Share Contact</button></div>
@@ -54,23 +96,25 @@ textarea{width:100%;height:150px;margin-top:14px;font-size:12px;line-height:1.45
 <script>
 const STORAGE_KEY='vcard_all_profiles';
 let profiles=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')||{Default:{fields:{},labels:[],values:[]}};
-const standardIds=['fName','lName','job','comp','phone','email','web','addr'];
+const standardIds=['prefix','fName','mName','lName','suffix','nickname','job','comp','phoneMobile','phoneWork','phoneHome','emailPersonal','emailWork','web','birthday','addr','note'];
 const $=id=>document.getElementById(id);
 function esc(v=''){return String(v).replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,')}
 function xLabel(v=''){let s=String(v).trim().toUpperCase().replace(/^X-/,'').replace(/[^A-Z0-9-]+/g,'-').replace(/^-+|-+$/g,'');return s?`X-${s}`:''}
 function currentData(){const fields={};standardIds.forEach(id=>fields[id]=$(id).value.trim());const labels=[],values=[];document.querySelectorAll('.custom-row').forEach(r=>{labels.push(r.querySelector('.cLabel').value.trim());values.push(r.querySelector('.cValue').value.trim())});return{fields,labels,values}}
-function buildVCard(){const d=currentData(),f=d.fields,fn=[f.fName,f.lName].filter(Boolean).join(' ')||'Unnamed Contact';const lines=['BEGIN:VCARD','VERSION:3.0',`N:${esc(f.lName)};${esc(f.fName)};;;`,`FN:${esc(fn)}`];if(f.comp)lines.push(`ORG:${esc(f.comp)}`);if(f.job)lines.push(`TITLE:${esc(f.job)}`);if(f.phone)lines.push(`TEL;TYPE=CELL:${esc(f.phone)}`);if(f.email)lines.push(`EMAIL;TYPE=INTERNET:${esc(f.email)}`);if(f.web)lines.push(`URL:${esc(f.web)}`);if(f.addr)lines.push(`ADR;TYPE=HOME:;;${esc(f.addr)};;;;`);d.labels.forEach((l,i)=>{const key=xLabel(l),val=d.values[i];if(key&&val)lines.push(`${key}:${esc(val)}`)});lines.push('END:VCARD');return lines.join('\r\n')+'\r\n'}
+function displayName(f){const main=[f.prefix,f.fName,f.mName,f.lName,f.suffix].filter(Boolean).join(' ').trim();return main||f.nickname||'Unnamed Contact'}
+function buildVCard(){const d=currentData(),f=d.fields,lines=['BEGIN:VCARD','VERSION:3.0',`N:${esc(f.lName)};${esc(f.fName)};${esc(f.mName)};${esc(f.prefix)};${esc(f.suffix)}`,`FN:${esc(displayName(f))}`];if(f.nickname)lines.push(`NICKNAME:${esc(f.nickname)}`);if(f.comp)lines.push(`ORG:${esc(f.comp)}`);if(f.job)lines.push(`TITLE:${esc(f.job)}`);if(f.phoneMobile)lines.push(`TEL;TYPE=CELL:${esc(f.phoneMobile)}`);if(f.phoneWork)lines.push(`TEL;TYPE=WORK:${esc(f.phoneWork)}`);if(f.phoneHome)lines.push(`TEL;TYPE=HOME:${esc(f.phoneHome)}`);if(f.emailPersonal)lines.push(`EMAIL;TYPE=INTERNET,HOME:${esc(f.emailPersonal)}`);if(f.emailWork)lines.push(`EMAIL;TYPE=INTERNET,WORK:${esc(f.emailWork)}`);if(f.web)lines.push(`URL:${esc(f.web)}`);if(f.birthday)lines.push(`BDAY:${esc(f.birthday)}`);if(f.addr)lines.push(`ADR;TYPE=HOME:;;${esc(f.addr)};;;;`);if(f.note)lines.push(`NOTE:${esc(f.note)}`);d.labels.forEach((l,i)=>{const key=xLabel(l),val=d.values[i];if(key&&val)lines.push(`${key}:${esc(val)}`)});lines.push('END:VCARD');return lines.join('\r\n')+'\r\n'}
 function updateRaw(){ $('rawOutput').value=buildVCard() }
 function status(msg){$('status').textContent=msg;clearTimeout(status.t);status.t=setTimeout(()=>{$('status').textContent=''},1800)}
 function toggleGuide(){const g=$('guide');g.style.display=g.style.display==='block'?'none':'block'}
 function saveAll(){localStorage.setItem(STORAGE_KEY,JSON.stringify(profiles))}
+function migrateFields(fields={}){const f={...fields};if(f.phone&&!f.phoneMobile)f.phoneMobile=f.phone;if(f.email&&!f.emailPersonal)f.emailPersonal=f.email;return f}
 function init(){const select=$('profileSelect'),current=select.value;select.innerHTML='';Object.keys(profiles).forEach(name=>select.add(new Option(name,name)));if(current&&profiles[current])select.value=current;loadProfile()}
 function addProfile(){if(Object.keys(profiles).length>=20)return alert('Limit of 20 profiles reached.');const name=prompt('Profile Name:')?.trim();if(!name)return;if(profiles[name])return alert('That profile already exists.');profiles[name]={fields:{},labels:[],values:[]};saveAll();init();$('profileSelect').value=name;loadProfile()}
 function deleteProfile(){const name=$('profileSelect').value;if(name==='Default')return alert('Cannot delete Default.');if(!confirm(`Delete ${name}?`))return;delete profiles[name];saveAll();init()}
 function addCustomField(label='',value=''){const row=document.createElement('div');row.className='custom-row';row.innerHTML=`<input class="cLabel" placeholder="Label" value="${label.replace(/"/g,'&quot;')}"><input class="cValue" placeholder="Value" value="${value.replace(/"/g,'&quot;')}">`;row.querySelectorAll('input').forEach(i=>i.addEventListener('input',updateRaw));$('customFields').appendChild(row)}
 function saveCurrentProfile(){const name=$('profileSelect').value;profiles[name]=currentData();saveAll();status(`Saved ${name}`)}
-function loadProfile(){const data=profiles[$('profileSelect').value]||{fields:{},labels:[],values:[]};standardIds.forEach(id=>$(id).value=data.fields?.[id]||'');$('customFields').innerHTML='';const count=Math.max(1,data.labels?.length||0,data.values?.length||0);for(let i=0;i<count;i++)addCustomField(data.labels?.[i]||'',data.values?.[i]||'');updateRaw()}
-function filename(){const f=$('fName').value.trim(),l=$('lName').value.trim();return ([f,l].filter(Boolean).join('-')||'contact').replace(/[^a-z0-9-_]+/gi,'-')+'.vcf'}
+function loadProfile(){const data=profiles[$('profileSelect').value]||{fields:{},labels:[],values:[]};const fields=migrateFields(data.fields||{});standardIds.forEach(id=>$(id).value=fields[id]||'');$('customFields').innerHTML='';const count=Math.max(1,data.labels?.length||0,data.values?.length||0);for(let i=0;i<count;i++)addCustomField(data.labels?.[i]||'',data.values?.[i]||'');updateRaw()}
+function filename(){const f=currentData().fields,name=[f.fName,f.lName].filter(Boolean).join('-')||f.nickname||'contact';return name.replace(/[^a-z0-9-_]+/gi,'-')+'.vcf'}
 function downloadVCard(){const blob=new Blob([buildVCard()],{type:'text/vcard;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename();document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);status('vCard exported')}
 async function shareVCard(){const text=buildVCard(),file=new File([text],filename(),{type:'text/vcard'});try{if(navigator.canShare?.({files:[file]})){await navigator.share({title:'Contact',files:[file]});status('Shared')}else if(navigator.share){await navigator.share({title:'Contact',text});status('Shared')}else{downloadVCard()}}catch(e){if(e.name!=='AbortError')downloadVCard()}}
 standardIds.forEach(id=>$(id).addEventListener('input',updateRaw));
